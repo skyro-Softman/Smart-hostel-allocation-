@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-4">Outpass Request Approval</h2>
+
+  <h4 class="mb-3">Pending Outpass Requests</h4>
+  <div class="table-responsive mb-5">
+    <table class="table table-bordered table-striped">
+      <thead class="table-warning">
+        <tr>
+          <th>Student Name</th>
+          <th>Student ID</th>
+          <th>Department</th>
+          <th>Outgoing</th>
+          <th>Incoming</th>
+          <th>Place</th>
+          <th>Reason</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for leave in pending_leaves %}
+          <tr>
+            <td>{{ leave.user.profile.full_name|default:leave.user.username }}</td>
+            <td>{{ leave.user.username }}</td>
+            <td>{{ leave.user.profile.department|default:'-' }}</td>
+            <td>{{ leave.outgoing_at|default:'-' }}</td>
+            <td>{{ leave.incoming_at|default:'-' }}</td>
+            <td>{{ leave.place|default:'-' }}</td>
+            <td>{{ leave.reason }}</td>
+            <td>
+              <form method="post" class="d-inline">
+                {% csrf_token %}
+                <input type="hidden" name="leave_id" value="{{ leave.id }}">
+                <button name="action" value="approve" class="btn btn-sm btn-success">Approve</button>
+                <button name="action" value="reject" class="btn btn-sm btn-danger">Reject</button>
+              </form>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="8" class="text-center">No pending outpass requests.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <h4 class="mb-3">Recently Reviewed</h4>
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped">
+      <thead class="table-light">
+        <tr>
+          <th>Student Name</th>
+          <th>Student ID</th>
+          <th>Status</th>
+          <th>Outgoing</th>
+          <th>Incoming</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for leave in reviewed_leaves %}
+          <tr>
+            <td>{{ leave.user.profile.full_name|default:leave.user.username }}</td>
+            <td>{{ leave.user.username }}</td>
+            <td>
+              {% if leave.status == 'APPROVED' %}
+                <span class="badge bg-success">Approved</span>
+              {% else %}
+                <span class="badge bg-danger">Rejected</span>
+              {% endif %}
+            </td>
+            <td>{{ leave.outgoing_at|default:'-' }}</td>
+            <td>{{ leave.incoming_at|default:'-' }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="5" class="text-center">No reviewed requests yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

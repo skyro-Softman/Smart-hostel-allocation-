@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Profile - Hostel Management System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      
+      <!-- Page Header -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-user-circle me-2"></i>My Profile</h2>
+        <a href="{% url 'student_dashboard' %}" class="btn btn-outline-secondary btn-sm">
+          <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+        </a>
+      </div>
+
+      <!-- Messages / Alerts -->
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4">
+          
+          <!-- Profile Header / Current Picture Overview -->
+          <div class="row align-items-center mb-4 pb-3 border-bottom">
+            <div class="col-md-3 text-center mb-3 mb-md-0">
+              {% if profile.profile_picture %}
+                <img src="{{ profile.profile_picture.url }}" alt="Profile Picture" class="rounded-circle img-thumbnail shadow-sm" style="width: 100px; height: 100px; object-fit: cover;">
+              {% else %}
+                <div class="rounded-circle bg-secondary text-white d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 100px; height: 100px; font-size: 2.5rem;">
+                  <i class="fas fa-user"></i>
+                </div>
+              {% endif %}
+            </div>
+            <div class="col-md-9">
+              <h4 class="mb-1">{{ profile.full_name|default:request.user.username }}</h4>
+              <p class="text-muted mb-1"><i class="fas fa-envelope me-1"></i> {{ request.user.email|default:"No email provided" }}</p>
+              <span class="badge bg-primary text-uppercase">{{ profile.role }}</span>
+              {% if profile.register_number %}
+                <span class="badge bg-secondary ms-1">Reg: {{ profile.register_number }}</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Profile Update Form -->
+          <form method="POST" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            
+            <div class="row g-3">
+              {% for field in form %}
+                <div class="col-md-{% if field.name == 'address' or field.name == 'medical_details' or field.name == 'id_proof' or field.name == 'profile_picture' %}12{% else %}6{% endif %}">
+                  <label for="{{ field.id_for_label }}" class="form-label fw-bold">
+                    {{ field.label }}
+                    {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                  </label>
+                  
+                  {{ field }}
+                  
+                  {% if field.help_text %}
+                    <div class="form-text text-muted small">{{ field.help_text }}</div>
+                  {% endif %}
+                  
+                  {% if field.errors %}
+                    <div class="invalid-feedback d-block">
+                      {% for error in field.errors %}
+                        {{ error }}
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+              {% endfor %}
+            </div>
+
+            <!-- Form Actions -->
+            <div class="mt-4 pt-3 border-top d-flex justify-content-end gap-2">
+              <a href="{% url 'student_dashboard' %}" class="btn btn-light">Cancel</a>
+              <button type="submit" class="btn btn-primary px-4">
+                <i class="fas fa-save me-1"></i> Save Changes
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // Add Bootstrap form-control class to form inputs automatically if not already rendered with it
+  document.addEventListener("DOMContentLoaded", function() {
+    const formFields = document.querySelectorAll("input, select, textarea");
+    formFields.forEach(field => {
+      if (!field.classList.contains('form-control') && !field.classList.contains('form-check-input') && !field.classList.contains('form-select')) {
+        if (field.tagName === 'SELECT') {
+          field.classList.add('form-select');
+        } else if (field.type === 'checkbox') {
+          field.classList.add('form-check-input');
+        } else {
+          field.classList.add('form-control');
+        }
+      }
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,110 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Hostels - Spin Wheel Allocation</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-4">
+  <div class="container">
+    <h1 class="mb-4">Select a Hostel for Spin-Wheel Allocation</h1>
+    
+    <div id="alert-container"></div>
+
+    <ul class="list-group">
+      {% for hostel in hostels %}
+        <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+          <div>
+            <h5 class="mb-1">{{ hostel.name }}</h5>
+            <span class="badge bg-secondary">{{ hostel.get_hostel_type_display }}</span>
+          </div>
+          <div class="btn-group">
+            <a href="{% url 'hostel:room_list' hostel.id %}" class="btn btn-sm btn-outline-primary me-2">View Rooms</a>
+            <button type="button" class="btn btn-sm btn-success spin-btn" data-hostel-id="{{ hostel.id }}" data-hostel-name="{{ hostel.name }}">
+              🎲 Spin for Room
+            </button>
+          </div>
+        </li>
+      {% empty %}
+        <li class="list-group-item">No hostels found.</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <!-- JavaScript to handle the Spin-Wheel AJAX POST request -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const spinButtons = document.querySelectorAll('.spin-btn');
+
+      spinButtons.forEach(button => {
+        button.addEventListener('click', function () {
+          const hostelId = this.getAttribute('data-hostel-id');
+          const hostelName = this.getAttribute('data-hostel-name');
+
+          if (!confirm(`Are you sure you want to spin for a room in ${hostelName}?`)) {
+            return;
+          }
+
+          // Disable button to prevent double-clicks
+          this.disabled = true;
+          this.textContent = 'Spinning...';
+
+          fetch(`{% url 'hostel:spin_wheel_allocate' 0 %}`.replace('0', hostelId), {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': getCookie('csrftoken'),
+              'Content-Type': 'application/json'
+            },
+          })
+          .then(response => response.json().then(data => ({ status: response.status, body: data })))
+          .then(({ status, body }) => {
+            const alertContainer = document.getElementById('alert-container');
+            if (status === 200 && body.status === 'success') {
+              alertContainer.innerHTML = `
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                  <strong>Success!</strong> ${body.message}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+              `;
+              // Reload page after a brief moment to transition to allocation status view
+              setTimeout(() => { window.location.reload(); }, 2500);
+            } else {
+              alertContainer.innerHTML = `
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                  <strong>Allocation Failed:</strong> ${body.message || 'An error occurred.'}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+              `;
+              this.disabled = false;
+              this.textContent = '🎲 Spin for Room';
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            this.disabled = false;
+            this.textContent = '🎲 Spin for Room';
+          });
+        });
+      });
+
+      // Helper function to extract Django CSRF token from cookies
+      function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
+            }
+          }
+        }
+        return cookieValue;
+      }
+    });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

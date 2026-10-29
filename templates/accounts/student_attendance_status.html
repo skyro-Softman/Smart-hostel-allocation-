@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-3">Attendance Status</h2>
+  <div class="row mb-3">
+    <div class="col-md-3"><div class="card"><div class="card-body"><strong>Total Records</strong><div>{{ total_count }}</div></div></div></div>
+    <div class="col-md-3"><div class="card"><div class="card-body"><strong>Present</strong><div class="text-success">{{ present_count }}</div></div></div></div>
+    <div class="col-md-3"><div class="card"><div class="card-body"><strong>Absent</strong><div class="text-danger">{{ absent_count }}</div></div></div></div>
+    <div class="col-md-3"><div class="card"><div class="card-body"><strong>Attendance %</strong><div>{{ percentage }}%</div></div></div></div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped">
+      <thead class="table-light"><tr><th>Date</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for item in attendance_qs %}
+          <tr>
+            <td>{{ item.date }}</td>
+            <td>
+              {% if item.status == 'PRESENT' %}
+                <span class="badge bg-success">Present</span>
+              {% else %}
+                <span class="badge bg-danger">Absent</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="2" class="text-center">No attendance records found in last 30 days.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

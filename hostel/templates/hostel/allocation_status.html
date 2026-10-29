@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <div class="card shadow-sm mx-auto" style="max-width: 600px;">
+    <div class="card-header bg-success text-white">
+      <h4 class="mb-0">Your Room Allocation Status</h4>
+    </div>
+    <div class="card-body">
+      <p class="text-muted">You have already been allocated a room.</p>
+      <ul class="list-group list-group-flush mb-4">
+        <li class="list-group-item"><strong>Hostel:</strong> {{ allocation.room.hostel.name }}</li>
+        <li class="list-group-item"><strong>Floor:</strong> {% if allocation.room.floor.name %}{{ allocation.room.floor.name }}{% else %}Floor {{ allocation.room.floor }}{% endif %}</li>
+        <li class="list-group-item"><strong>Room Number:</strong> {{ allocation.room.room_number }}</li>
+        <li class="list-group-item"><strong>Bed Code:</strong> {{ allocation.bed.bed_code }}</li>
+      </ul>
+
+      <!-- Button linking to the official printable slip -->
+      <div class="text-center">
+        <a href="{% url 'hostel:allocation_slip' %}" class="btn btn-primary w-100 py-2">
+          <i class="bi bi-file-earmark-text me-1"></i> View & Print Allocation Slip
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

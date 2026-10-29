@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+      <h2 class="mb-1">Room Allocation — {{ hostel.name }}</h2>
+      {% if student_dept %}
+        <p class="text-muted mb-0 small">
+          <i class="bi bi-info-circle"></i>
+          Rooms marked <span class="badge bg-success"><i class="bi bi-star-fill"></i> Recommended</span>
+          have students from your department already: <strong>{{ student_dept }}</strong>
+        </p>
+      {% endif %}
+    </div>
+    <a href="{% url 'hostel:hostel_list' %}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Back to Hostels
+    </a>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- SPIN WHEEL SECTION -->
+  {% if user.is_authenticated and user.profile.role == 'STUDENT' %}
+  <div class="card shadow-sm border-0 mb-5 p-4 text-center bg-light">
+    <h3 class="fw-bold text-primary mb-1"><i class="bi bi-disc"></i> Spin for Your Room Allocation</h3>
+    <p class="text-muted small mb-3">Click the button below to spin the wheel and let the system automatically assign your room.</p>
+    
+    <div class="d-flex flex-column align-items-center position-relative">
+      <!-- Top Pointer Indicator -->
+      <div style="width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 25px solid #dc3545; z-index: 10; margin-bottom: -10px;"></div>
+      
+      <!-- Wheel Canvas -->
+      <canvas id="wheelCanvas" width="320" height="320" style="border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.15);"></canvas>
+      
+      <button id="spinBtn" onclick="spinWheel()" class="btn btn-primary btn-lg mt-4 px-4 shadow-sm">
+        <i class="bi bi-arrow-repeat"></i> Spin for a Room
+      </button>
+      <div id="spinResult" class="mt-3 fw-bold fs-5 text-success"></div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ROOMS OVERVIEW GRID (VIEW ONLY) -->
+  <h4 class="mb-3">Available Room Status Overview</h4>
+  <div class="row g-4">
+    {% for rd in room_data %}
+    {% with room=rd.room %}
+    <div class="col-md-4 col-sm-6">
+      <div class="card h-100 border-0 shadow-sm"
+           style="{% if rd.is_recommended %}border: 2px solid #0d9488 !important;{% endif %}">
+        <div class="card-header d-flex justify-content-between align-items-center
+          {% if not rd.available %}bg-secondary text-white
+          {% elif rd.is_recommended %}text-white{% else %}bg-light{% endif %}"
+          {% if rd.is_recommended %}style="background: #0d9488;"{% endif %}>
+          <span class="fw-bold">Room {{ room.room_number }}</span>
+          <div class="d-flex gap-1 flex-wrap">
+            {% if rd.is_recommended %}
+              <span class="badge bg-white text-success fw-bold"><i class="bi bi-star-fill"></i> Recommended</span>
+            {% endif %}
+            {% if not rd.available %}
+              <span class="badge bg-danger">Full</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="card-body d-flex flex-column">
+          {% if room.floor %}
+            <p class="mb-1 text-muted small"><i class="bi bi-layers"></i> Floor {{ room.floor.floor_name }}</p>
+          {% endif %}
+          <div class="mb-2">
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <span class="text-muted small">Occupancy</span>
+              <div class="progress flex-grow-1" style="height:8px;">
+                {% with width_pct=rd.occupied|default:0|stringformat:"d" %}
+                <div class="progress-bar {% if not rd.available %}bg-danger{% elif rd.occupied > 0 %}bg-warning{% else %}bg-success{% endif %}"
+                     style="width: calc(({{ rd.occupied|default:0 }} / {{ room.capacity }}) * 100%);">
+                </div>
+                {% endwith %}
+              </div>
+              <span class="small fw-bold">{{ rd.occupied }}/{{ room.capacity }}</span>
+            </div>
+          </div>
+
+          {% if rd.same_dept_count > 0 %}
+            <p class="mb-2 text-success small fw-semibold">
+              <i class="bi bi-people-fill"></i>
+              {{ rd.same_dept_count }} student{{ rd.same_dept_count|pluralize }} from your department
+            </p>
+          {% endif %}
+
+          <p class="mb-2 small text-muted">
+            <strong>Beds Available:</strong> {{ rd.available|yesno:"Yes,No" }}
+          </p>
+        </div>
+      </div>
+    </div>
+    {% endwith %}
+    {% empty %}
+      <div class="col-12">
+        <div class="alert alert-info">No rooms found for this hostel.</div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- SPIN WHEEL SCRIPT -->
+{% if user.is_authenticated and user.profile.role == 'STUDENT' %}
+<script>
+const availableRooms = [
+  {% for rd in room_data %}
+    {% if rd.available %}"{{ rd.room.room_number }}",{% endif %}
+  {% endfor %}
+];
+
+const canvas = document.getElementById('wheelCanvas');
+const ctx = canvas.getContext('2d');
+const numSegments = availableRooms.length;
+const anglePerSegment = (2 * Math.PI) / (numSegments || 1);
+let currentAngle = 0;
+
+function drawWheel() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (numSegments === 0) {
+        ctx.fillStyle = "#6c757d";
+        ctx.font = "bold 16px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("No Rooms Available", 160, 160);
+        document.getElementById('spinBtn').disabled = true;
+        return;
+    }
+
+    const colors = ['#0d9488', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#10b981'];
+    
+    for (let i = 0; i < numSegments; i++) {
+        const startAngle = currentAngle + (i * anglePerSegment);
+        const endAngle = startAngle + anglePerSegment;
+        
+        ctx.beginPath();
+        ctx.moveTo(160, 160);
+        ctx.arc(160, 160, 150, startAngle, endAngle);
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "#ffffff";
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(160, 160);
+        ctx.rotate(startAngle + anglePerSegment / 2);
+        ctx.textAlign = "right";
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 14px sans-serif";
+        ctx.fillText("Room " + availableRooms[i], 135, 5);
+        ctx.restore();
+    }
+}
+
+drawWheel();
+
+function spinWheel() {
+    const btn = document.getElementById('spinBtn');
+    btn.disabled = true;
+
+    // Fixed namespace prefix here: hostel:spin_wheel_allocate
+    fetch("{% url 'hostel:spin_wheel_allocate' hostel.id %}", {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": "{{ csrf_token }}",
+            "Content-Type": "application/json"
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            const chosenIndex = availableRooms.indexOf(data.room_number);
+            const extraRotations = 5; 
+            
+            const sliceCenter = (chosenIndex * anglePerSegment) + (anglePerSegment / 2);
+            const targetAngle = (2 * Math.PI * extraRotations) - sliceCenter - (Math.PI / 2);
+            
+            let startTime = null;
+
+            function animate(timestamp) {
+                if (!startTime) startTime = timestamp;
+                let progress = (timestamp - startTime) / 4000;
+
+                if (progress < 1) {
+                    currentAngle = targetAngle * (1 - Math.pow(1 - progress, 3));
+                    drawWheel();
+                    requestAnimationFrame(animate);
+                } else {
+                    currentAngle = targetAngle;
+                    drawWheel();
+                    document.getElementById('spinResult').innerText = data.message;
+                    setTimeout(() => { window.location.reload(); }, 2000);
+                }
+            }
+            requestAnimationFrame(animate);
+        } else {
+            alert(data.message);
+            btn.disabled = false;
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("An error occurred while spinning. Please try again.");
+        btn.disabled = false;
+    });
+}
+</script>
+{% endif %}
+{% endblock %}

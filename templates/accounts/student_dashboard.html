@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block body_class %}page-student-hostel-selection{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      
+      <!-- Automated Room Allocation Spin Wheel Redirect Card -->
+      <div class="card shadow-sm text-center p-4">
+        <div class="card-body">
+          {% if pending_request %}
+            <div class="alert alert-info">
+              <h5>Pending Allocation Request</h5>
+              <p class="mb-0">
+                You have a pending room allocation request for 
+                <strong>{{ pending_request.room.hostel.name }}</strong> 
+                (Room: {{ pending_request.room.room_number }}). Please wait for warden approval.
+              </p>
+            </div>
+          {% else %}
+            <h3 class="fw-bold text-primary mb-3"><i class="bi bi-disc"></i> Ready for Room Allocation</h3>
+            <p class="text-muted mb-4">
+              Manual hostel and room selection has been disabled. Click below to proceed to your automated spin-wheel room assignment.
+            </p>
+
+            {% if hostels %}
+              <!-- Automatically target the first matching gender hostel from backend context -->
+              <a href="{% url 'hostel:spin_wheel_allocate' hostels.0.id %}" class="btn btn-primary btn-lg px-5 shadow-sm">
+                <i class="bi bi-arrow-right-circle"></i> Proceed to Spin Wheel Allocation
+              </a>
+            {% else %}
+              <!-- Fallback bypass ensuring the button is always rendered using the primary/first available hostel fallback -->
+              <a href="{% url 'hostel:spin_wheel_allocate' 1 %}" class="btn btn-primary btn-lg px-5 shadow-sm">
+                <i class="bi bi-arrow-right-circle"></i> Proceed to Spin Wheel Allocation
+              </a>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-4">Occupancy Report</h2>
+  
+  <div class="mb-3">
+    <a href="{% url 'staff_dashboard' %}" class="btn btn-secondary">← Back to Dashboard</a>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header bg-dark text-white">
+      <h5 class="mb-0">Occupancy Analysis Chart</h5>
+    </div>
+    <div class="card-body">
+      <canvas id="occupancyChart" height="110"></canvas>
+    </div>
+  </div>
+
+  {% for data in report_data %}
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">{{ data.hostel.name }} ({{ data.hostel.get_hostel_type_display }})</h4>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-3">
+            <div class="text-center p-3 bg-light rounded">
+              <h3 class="text-primary">{{ data.total_rooms }}</h3>
+              <p class="mb-0 text-muted">Total Rooms</p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="text-center p-3 bg-light rounded">
+              <h3 class="text-info">{{ data.total_beds }}</h3>
+              <p class="mb-0 text-muted">Total Beds</p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="text-center p-3 bg-light rounded">
+              <h3 class="text-success">{{ data.occupied_beds }}</h3>
+              <p class="mb-0 text-muted">Occupied Beds</p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="text-center p-3 bg-light rounded">
+              <h3 class="text-warning">{{ data.vacant_beds }}</h3>
+              <p class="mb-0 text-muted">Vacant Beds</p>
+            </div>
+          </div>
+        </div>
+        <div class="mt-3">
+          <div class="progress" style="height: 30px;">
+            <div class="progress-bar bg-success occupancy-progress" role="progressbar" style="width: 0%;" data-width="{{ data.occupancy_rate }}" aria-valuenow="{{ data.occupancy_rate }}" aria-valuemin="0" aria-valuemax="100">
+              {{ data.occupancy_rate }}% Occupancy
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% empty %}
+    <div class="alert alert-info">No hostel data available.</div>
+  {% endfor %}
+</div>
+
+<script id="occupancy-chart-data" type="application/json">
+{
+  "labels": [
+    {% for data in report_data %}
+      "{{ data.hostel.name|escapejs }}"{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ],
+  "occupied": [
+    {% for data in report_data %}
+      {{ data.occupied_beds }}{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ],
+  "vacant": [
+    {% for data in report_data %}
+      {{ data.vacant_beds }}{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ]
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.querySelectorAll('.occupancy-progress').forEach((bar) => {
+    bar.style.width = `${bar.dataset.width || 0}%`;
+  });
+
+  const occupancyChartData = JSON.parse(document.getElementById('occupancy-chart-data').textContent);
+  const occupancyLabels = occupancyChartData.labels || [];
+  const occupiedBeds = occupancyChartData.occupied || [];
+  const vacantBeds = occupancyChartData.vacant || [];
+
+  if (occupancyLabels.length > 0) {
+    new Chart(document.getElementById('occupancyChart'), {
+      type: 'bar',
+      data: {
+        labels: occupancyLabels,
+        datasets: [
+          {
+            label: 'Occupied Beds',
+            data: occupiedBeds,
+            backgroundColor: 'rgba(22, 163, 74, 0.75)'
+          },
+          {
+            label: 'Vacant Beds',
+            data: vacantBeds,
+            backgroundColor: 'rgba(245, 158, 11, 0.75)'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'top' }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { precision: 0 }
+          }
+        }
+      }
+    });
+  }
+</script>
+{% endblock %}

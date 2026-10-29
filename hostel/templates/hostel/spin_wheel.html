@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Spin Wheel Allocation - {{ hostel.name }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background-color: #f4f7f6; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .wheel-container { margin: 30px auto; position: relative; width: 200px; height: 200px; border-radius: 50%; border: 10px solid #333; display: flex; align-items: center; justify-content: center; background: #ffcc00; font-weight: bold; font-size: 1.2rem; }
+        button { padding: 12px 25px; font-size: 1rem; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        #result { margin-top: 20px; font-size: 1.1rem; font-weight: bold; color: #28a745; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Spin for Your Room in {{ hostel.name }}</h2>
+    <p>Click the button below to spin the wheel and automatically be assigned an available room and bed.</p>
+
+    <div class="wheel-container" id="wheel">
+        SPIN!
+    </div>
+
+    <button id="spin-btn" onclick="triggerSpin()">Spin the Wheel</button>
+
+    <div id="result"></div>
+</div>
+
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function triggerSpin() {
+        const btn = document.getElementById('spin-btn');
+        const resultDiv = document.getElementById('result');
+        const wheel = document.getElementById('wheel');
+        
+        btn.disabled = true;
+        wheel.style.transform = "rotate(720deg)";
+        wheel.style.transition = "transform 1.5s ease-out";
+        resultDiv.innerText = "Spinning...";
+
+        const csrftoken = getCookie('csrftoken');
+
+        fetch("{% url 'hostel:spin_wheel_allocate' hostel.pk %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+        })
+        .then(response => response.json().then(data => ({ status: response.status, body: data })))
+        .then(res => {
+            setTimeout(() => {
+                if (res.status === 200 && res.body.status === 'success') {
+                    resultDiv.style.color = "#28a745";
+                    resultDiv.innerText = res.body.message;
+                    setTimeout(() => {
+                        window.location.href = "{% url 'hostel:hostel_list' %}";
+                    }, 3000);
+                } else {
+                    resultDiv.style.color = "#dc3545";
+                    resultDiv.innerText = res.body.message || "An error occurred.";
+                    btn.disabled = false;
+                }
+            }, 1500);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            resultDiv.style.color = "#dc3545";
+            resultDiv.innerText = "A network error occurred. Please try again.";
+            btn.disabled = false;
+        });
+    }
+</script>
+
+</body>
+</html>

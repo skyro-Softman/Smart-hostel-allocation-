@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+      <div class="card border-0">
+        <div class="card-header bg-transparent py-4">
+          <h3 class="card-title mb-1">{{ selected_role|title }} Registration</h3>
+          {% if selected_role %}
+            <p class="text-muted mb-0">Create your {{ selected_role|title }} account with verified details.</p>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+
+            <!-- Student Fields -->
+            {% if is_student %}
+            <div class="mb-3">
+              <label class="form-label">Full Name *</label>
+              {{ form.full_name }}
+              {{ form.full_name.errors }}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Register Number *</label>
+              {{ form.register_number }}
+              <small class="form-text text-muted">Used as login username</small>
+              {{ form.register_number.errors }}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Gender *</label>
+              {{ form.gender }}
+              <small class="form-text text-muted">Required for proper hostel allocation.</small>
+              {{ form.gender.errors }}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Department *</label>
+              {{ form.department }}
+              {{ form.department.errors }}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Year of Study</label>
+              {{ form.year_of_study }}
+              {{ form.year_of_study.errors }}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Distance from Campus (km)</label>
+              {{ form.distance_from_campus }}
+              {{ form.distance_from_campus.errors }}
+            </div>
+
+            <!-- Medical Information Section -->
+            <div class="mb-3 form-check">
+              {{ form.has_medical_condition }}
+              <label class="form-check-label" for="{{ form.has_medical_condition.id_for_label }}">
+                I have a medical condition / physical disability requiring ground floor room allocation
+              </label>
+              {{ form.has_medical_condition.errors }}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Medical Condition Type</label>
+              {{ form.medical_condition_type }}
+              {{ form.medical_condition_type.errors }}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Medical Details / Notes</label>
+              {{ form.medical_details }}
+              {{ form.medical_details.errors }}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Address *</label>
+              {{ form.address }}
+              {{ form.address.errors }}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Phone Number *</label>
+              {{ form.phone_number }}
+              {{ form.phone_number.errors }}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Photo</label>
+              {{ form.photo }}
+              {{ form.photo.errors }}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">ID Proof *</label>
+              {{ form.id_proof }}
+              <small class="form-text text-muted">Upload ID proof (Aadhar, Passport, etc.)</small>
+              {{ form.id_proof.errors }}
+            </div>
+
+            <!-- Hidden warden fields -->
+            {{ form.warden_id }}
+
+            {% else %}
+            <!-- Warden Fields -->
+            <div class="mb-3">
+              <label class="form-label">Full Name *</label>
+              {{ form.full_name }}
+              {{ form.full_name.errors }}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Warden ID *</label>
+              {{ form.warden_id }}
+              <small class="form-text text-muted">Used as login username</small>
+              {{ form.warden_id.errors }}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Gender *</label>
+              {{ form.gender }}
+              <small class="form-text text-muted">Required for proper hostel assignment.</small>
+              {{ form.gender.errors }}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Phone Number *</label>
+              {{ form.phone_number }}
+              {{ form.phone_number.errors }}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Address *</label>
+              {{ form.address }}
+              {{ form.address.errors }}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Photo</label>
+              {{ form.photo }}
+              {{ form.photo.errors }}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">ID Proof *</label>
+              {{ form.id_proof }}
+              <small class="form-text text-muted">Upload ID proof (Aadhar, Passport, etc.)</small>
+              {{ form.id_proof.errors }}
+            </div>
+
+            <!-- Hidden student fields -->
+            {{ form.register_number }}
+            {{ form.department }}
+            {{ form.year_of_study }}
+            {{ form.distance_from_campus }}
+            {{ form.has_medical_condition }}
+            {{ form.medical_condition_type }}
+            {{ form.medical_details }}
+
+            {% endif %}
+
+            <!-- Common Fields -->
+            <div class="mb-3">
+              <label class="form-label">Email *</label>
+              {{ form.email }}
+              {{ form.email.errors }}
+            </div>
+
+            <!-- Password 1 with Eye Toggle -->
+            <div class="mb-3">
+              <label class="form-label">Password *</label>
+              <div class="input-group">
+                {{ form.password1 }}
+                <button class="btn btn-outline-secondary toggle-password" type="button" data-target="id_password1">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+              <small class="form-text text-muted">{{ form.password1.help_text|safe }}</small>
+              {{ form.password1.errors }}
+            </div>
+
+            <!-- Password 2 with Eye Toggle -->
+            <div class="mb-3">
+              <label class="form-label">Confirm Password *</label>
+              <div class="input-group">
+                {{ form.password2 }}
+                <button class="btn btn-outline-secondary toggle-password" type="button" data-target="id_password2">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+              {{ form.password2.errors }}
+            </div>
+
+            <div class="d-grid gap-2">
+              <button class="btn btn-primary btn-lg" type="submit"><i class="bi bi-person-plus-fill me-1"></i>Register</button>
+            </div>
+          </form>
+          <hr>
+          <p class="text-center mb-0"><a class="fw-semibold" href="{% url 'login' %}">Back to Login</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const toggleButtons = document.querySelectorAll('.toggle-password');
+    toggleButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const targetId = this.getAttribute('data-target');
+        const input = document.getElementById(targetId);
+        const icon = this.querySelector('i');
+        
+        if (input && input.type === 'password') {
+          input.type = 'text';
+          icon.classList.remove('bi-eye');
+          icon.classList.add('bi-eye-slash');
+        } else if (input) {
+          input.type = 'password';
+          icon.classList.remove('bi-eye-slash');
+          icon.classList.add('bi-eye');
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

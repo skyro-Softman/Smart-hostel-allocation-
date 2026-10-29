@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-4">Select Hostel and Room</h2>
+
+  {% if pending_request %}
+    <div class="alert alert-info">
+      Your room request is pending with warden approval:
+      <strong>{{ pending_request.room.hostel.name }} - Room {{ pending_request.room.room_number }}</strong>.
+    </div>
+  {% endif %}
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title">Your Department</h5>
+      <p class="mb-0">{{ student_department }}</p>
+    </div>
+  </div>
+
+  <form method="get" class="row g-2 align-items-end mb-4">
+    <div class="col-md-6">
+      <label class="form-label">Choose Hostel</label>
+      <select name="hostel" class="form-select" onchange="this.form.submit()">
+        <option value="">Select hostel</option>
+        {% for hostel in hostels %}
+          <option value="{{ hostel.id }}" {% if selected_hostel and selected_hostel.id == hostel.id %}selected{% endif %}>
+            {{ hostel.name }} ({{ hostel.get_hostel_type_display }})
+          </option>
+        {% empty %}
+          <!-- Absolute fallback if context list is empty -->
+          <option value="" disabled>No hostels currently loaded or matched</option>
+        {% endfor %}
+      </select>
+    </div>
+  </form>
+
+  {% if selected_hostel %}
+    <h4 class="mb-3">Suggested Rooms (Same Department Students)</h4>
+    {% if suggested_rooms %}
+      {% for room_data in suggested_rooms %}
+        <div class="card mb-3 border-success">
+          <div class="card-header bg-success-subtle d-flex justify-content-between">
+            <strong>Floor {{ room_data.room.floor.floor_name|default:'-' }} - Room {{ room_data.room.room_number }}</strong>
+            <span>Occupied {{ room_data.occupied_count }} / {{ room_data.room.capacity }}</span>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive mb-2">
+              <table class="table table-sm table-bordered">
+                <thead>
+                  <tr><th>Bed Number</th><th>Student Name</th><th>Student ID</th><th>Department</th></tr>
+                </thead>
+                <tbody>
+                  {% for occ in room_data.occupants %}
+                    <tr>
+                      <td>{{ occ.bed_number }}</td>
+                      <td>{{ occ.student_name }}</td>
+                      <td>{{ occ.student_id }}</td>
+                      <td>{{ occ.department }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% if not room_data.is_full and not pending_request %}
+              <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="hostel_id" value="{{ selected_hostel.id }}">
+                <input type="hidden" name="room_id" value="{{ room_data.room.id }}">
+                <button class="btn btn-success">Request This Room</button>
+              </form>
+            {% else %}
+              <span class="badge bg-secondary">{% if room_data.is_full %}Room Full{% else %}Request Pending{% endif %}</span>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="alert alert-secondary">No same-department suggested rooms found in this hostel.</div>
+    {% endif %}
+
+    <h4 class="mb-3 mt-4">Other Rooms</h4>
+    {% if other_rooms %}
+      {% for room_data in other_rooms %}
+        <div class="card mb-3">
+          <div class="card-header d-flex justify-content-between">
+            <strong>Floor {{ room_data.room.floor.floor_name|default:'-' }} - Room {{ room_data.room.room_number }}</strong>
+            <span>Occupied {{ room_data.occupied_count }} / {{ room_data.room.capacity }}</span>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive mb-2">
+              <table class="table table-sm table-bordered">
+                <thead>
+                  <tr><th>Bed Number</th><th>Student Name</th><th>Student ID</th><th>Department</th></tr>
+                </thead>
+                <tbody>
+                  {% for occ in room_data.occupants %}
+                    <tr>
+                      <td>{{ occ.bed_number }}</td>
+                      <td>{{ occ.student_name }}</td>
+                      <td>{{ occ.student_id }}</td>
+                      <td>{{ occ.department }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% if not room_data.is_full and not pending_request %}
+              <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="hostel_id" value="{{ selected_hostel.id }}">
+                <input type="hidden" name="room_id" value="{{ room_data.room.id }}">
+                <button class="btn btn-outline-primary">Request This Room</button>
+              </form>
+            {% else %}
+              <span class="badge bg-secondary">{% if room_data.is_full %}Room Full{% else %}Request Pending{% endif %}</span>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="alert alert-secondary">No rooms available.</div>
+    {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

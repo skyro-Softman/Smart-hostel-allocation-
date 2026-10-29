@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+  .section-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+  }
+  .section-head {
+    background: linear-gradient(120deg, #0f172a, #1e293b);
+    color: #fff;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    padding: 0.75rem 1rem;
+  }
+</style>
+
+<div class="container py-4">
+  <h2 class="mb-3">Admin Management</h2>
+  <p class="text-muted">Configure hostels, floors, rooms, beds and update student hostel, mess, and laundry payments.</p>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <div class="section-card">
+        <div class="section-head"><strong>Add Hostel</strong></div>
+        <div class="p-3">
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_hostel">
+            {{ hostel_form.as_p }}
+            <button class="btn btn-primary" type="submit">Save Hostel</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="section-card">
+        <div class="section-head"><strong>Add Floor</strong></div>
+        <div class="p-3">
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_floor">
+            {{ floor_form.as_p }}
+            <button class="btn btn-primary" type="submit">Save Floor</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="section-card">
+        <div class="section-head"><strong>Add Room</strong></div>
+        <div class="p-3">
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_room">
+            {{ room_form.as_p }}
+            <button class="btn btn-primary" type="submit">Save Room</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="section-card">
+        <div class="section-head"><strong>Add Beds</strong></div>
+        <div class="p-3">
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_beds">
+            {{ bed_form.as_p }}
+            <button class="btn btn-primary" type="submit">Save Beds</button>
+          </form>
+          <small class="text-muted">Bed numbers are generated automatically like TR36-A, TR36-B.</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <div class="section-card">
+        <div class="section-head"><strong>Student Payments (Hostel, Mess, Laundry)</strong></div>
+        <div class="p-3">
+          <form method="post" class="mb-3">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_fee">
+            {{ fee_form.as_p }}
+            <button class="btn btn-success" type="submit">Add Payment Record</button>
+          </form>
+
+          <div class="table-responsive">
+            <table class="table table-striped align-middle">
+              <thead>
+                <tr>
+                  <th>Student Name</th>
+                  <th>Student ID</th>
+                  <th>Type</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  <th>Update</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for fee in recent_fees %}
+                  <tr>
+                    <td>{{ fee.user.profile.full_name|default:fee.user.username }}</td>
+                    <td>{{ fee.user.username }}</td>
+                    <td>{{ fee.fee_type }}</td>
+                    <td>{{ fee.amount }}</td>
+                    <td>{{ fee.payment_status }}</td>
+                    <td>{{ fee.created_at }}</td>
+                    <td>
+                      <form method="post" class="d-flex gap-2">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="update_fee_status">
+                        <input type="hidden" name="fee_status-fee_id" value="{{ fee.id }}">
+                        <select name="fee_status-payment_status" class="form-select form-select-sm" style="max-width: 120px;">
+                          {% for value, label in fee_status_choices %}
+                            <option value="{{ value }}" {% if fee.payment_status == value %}selected{% endif %}>{{ label }}</option>
+                          {% endfor %}
+                        </select>
+                        <button class="btn btn-sm btn-outline-primary" type="submit">Update</button>
+                      </form>
+                    </td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="7">No payment records yet.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <div class="section-card">
+        <div class="section-head"><strong>Current Setup Snapshot</strong></div>
+        <div class="p-3">
+          <div class="row">
+            <div class="col-md-3"><strong>Hostels:</strong> {{ hostels|length }}</div>
+            <div class="col-md-3"><strong>Floors:</strong> {{ floors|length }}</div>
+            <div class="col-md-3"><strong>Rooms:</strong> {{ rooms|length }}</div>
+            <div class="col-md-3"><strong>Beds:</strong> {{ beds|length }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

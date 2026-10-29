@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+
+{% block body_class %}page-dashboard-admin{% endblock %}
+
+{% block content %}
+<style>
+  .admin-hero {
+    background: linear-gradient(135deg, #0f766e, #0284c7);
+    color: white;
+    padding: 3rem 2rem;
+    border-radius: 16px;
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  .action-btn {
+    padding: 2rem 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+  .report-card {
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    background: #ffffff;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  }
+  .report-header {
+    background: linear-gradient(120deg, #0ea5e9, #0d9488);
+    color: white;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    font-weight: 600;
+  }
+  .stat-box {
+    background: #f3f4f6;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+  }
+  .stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #0f766e;
+  }
+  .stat-label {
+    color: #6b7280;
+    font-size: 0.875rem;
+  }
+</style>
+
+<div class="container py-4">
+  <div class="admin-hero">
+    <h1 class="mb-2">Logged in as Admin</h1>
+    <p class="mb-0">Welcome, {{ user.profile.full_name|default:user.username }}. Manage your hostel system below.</p>
+  </div>
+
+  <div class="row g-4 mb-5 justify-content-center">
+    <div class="col-md-4">
+      <a href="{% url 'hostel:admin_hostel_add' %}" class="btn btn-primary w-100 action-btn">
+        <i class="bi bi-building"></i><br>
+        Hostel Add
+      </a>
+    </div>
+    <div class="col-md-4">
+      <a href="{% url 'hostel:admin_warden_list' %}" class="btn btn-warning w-100 action-btn">
+        <i class="bi bi-person-badge"></i><br>
+        Warden List
+      </a>
+    </div>
+  </div>
+
+  <!-- Report Generation Section -->
+  <h2 class="mb-4">Report Generation</h2>
+
+  <!-- Occupancy Report -->
+  <div class="report-card">
+    <div class="report-header">Occupancy Report</div>
+    <div class="row g-3 mb-3">
+      <div class="col-md-3">
+        <div class="stat-box">
+          <div class="stat-number">{{ occupancy_stats.total_beds }}</div>
+          <div class="stat-label">Total Beds</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-box">
+          <div class="stat-number">{{ occupancy_stats.occupied_beds }}</div>
+          <div class="stat-label">Occupied Beds</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-box">
+          <div class="stat-number">{{ occupancy_stats.vacant_beds }}</div>
+          <div class="stat-label">Vacant Beds</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-box">
+          <div class="stat-number">{{ occupancy_stats.occupancy_rate }}%</div>
+          <div class="stat-label">Occupancy Rate</div>
+        </div>
+      </div>
+    </div>
+    <a href="{% url 'admin_report_occupancy' %}" class="btn btn-primary">View Detailed Report</a>
+  </div>
+
+  <!-- Attendance Report -->
+  <div class="report-card">
+    <div class="report-header">Attendance Report</div>
+    <div class="row g-3 mb-3">
+      <div class="col-md-3">
+        <div class="stat-box">
+          <div class="stat-number">{{ attendance_stats.total_records }}</div>
+          <div class="stat-label">Total Records</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-box">
+          <div class="stat-number">{{ attendance_stats.present_count }}</div>
+          <div class="stat-label">Present Today</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-box">
+          <div class="stat-number">{{ attendance_stats.absent_count }}</div>
+          <div class="stat-label">Absent Today</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-box">
+          <div class="stat-number">{{ attendance_stats.leave_requests }}</div>
+          <div class="stat-label">Leave Requests</div>
+        </div>
+      </div>
+    </div>
+    <a href="{% url 'admin_report_attendance' %}" class="btn btn-primary">View Detailed Report</a>
+  </div>
+
+  <!-- Complaint Report -->
+  <div class="report-card">
+    <div class="report-header">Complaint Report</div>
+    <div class="row g-3 mb-3">
+      <div class="col-md-3">
+        <div class="stat-box">
+          <div class="stat-number">{{ complaint_stats.total_complaints }}</div>
+          <div class="stat-label">Total Complaints</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-box">
+          <div class="stat-number">{{ complaint_stats.pending }}</div>
+          <div class="stat-label">Pending</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-box">
+          <div class="stat-number">{{ complaint_stats.resolved }}</div>
+          <div class="stat-label">Resolved</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-box">
+          <div class="stat-number">{{ complaint_stats.resolution_rate }}%</div>
+          <div class="stat-label">Resolution Rate</div>
+        </div>
+      </div>
+    </div>
+    <a href="{% url 'admin_report_complaints' %}" class="btn btn-primary">View Detailed Report</a>
+  </div>
+</div>
+{% endblock %}

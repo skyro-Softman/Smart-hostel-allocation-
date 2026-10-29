@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+  .warden-section {
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    background: #f9fafb;
+  }
+  .section-header {
+    background: linear-gradient(120deg, #f59e0b, #ef4444);
+    color: white;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+  }
+</style>
+
+<div class="container py-4">
+  <h2 class="mb-4">Warden Management</h2>
+  <p class="text-muted">Approve wardens and assign them to hostels.</p>
+
+  <!-- Pending Wardens -->
+  <div class="warden-section">
+    <div class="section-header">
+      <h4 class="mb-0">Pending Warden Approvals</h4>
+    </div>
+    {% if pending_wardens %}
+      <div class="table-responsive">
+        <table class="table table-striped align-middle">
+          <thead>
+            <tr>
+              <th>Warden Name</th>
+              <th>Warden ID</th>
+              <th>Email</th>
+              <th>Warden ID (Profile)</th>
+              <th>ID Proof</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for warden in pending_wardens %}
+              <tr>
+                <td>{{ warden.full_name|default:warden.user.username }}</td>
+                <td>{{ warden.user.username }}</td>
+                <td>{{ warden.user.email }}</td>
+                <td>{{ warden.warden_id|default:'-' }}</td>
+                <td>
+                  {% if warden.id_proof %}
+                    <a href="{{ warden.id_proof.url }}" target="_blank" class="btn btn-sm btn-outline-secondary">View ID</a>
+                  {% else %}
+                    <span class="text-muted">Not uploaded</span>
+                  {% endif %}
+                </td>
+                <td><span class="badge bg-warning">Pending</span></td>
+                <td>
+                  <form method="post" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="approve">
+                    <input type="hidden" name="profile_id" value="{{ warden.id }}">
+                    <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="text-muted mb-0">No pending wardens.</p>
+    {% endif %}
+  </div>
+
+  <!-- Approved Wardens -->
+  <div class="warden-section">
+    <div class="section-header" style="background: linear-gradient(120deg, #10b981, #3b82f6);">
+      <h4 class="mb-0">Approved Wardens</h4>
+    </div>
+    {% if approved_wardens %}
+      <div class="table-responsive">
+        <table class="table table-striped align-middle">
+          <thead>
+            <tr>
+              <th>Warden Name</th>
+              <th>Warden ID</th>
+              <th>Email</th>
+              <th>Warden ID (Profile)</th>
+              <th>ID Proof</th>
+              <th>Assigned Hostel</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for warden in approved_wardens %}
+              <tr>
+                <td>{{ warden.full_name|default:warden.user.username }}</td>
+                <td>{{ warden.user.username }}</td>
+                <td>{{ warden.user.email }}</td>
+                <td>{{ warden.warden_id|default:'-' }}</td>
+                <td>
+                  {% if warden.id_proof %}
+                    <a href="{{ warden.id_proof.url }}" target="_blank" class="btn btn-sm btn-outline-secondary">View ID</a>
+                  {% else %}
+                    <span class="text-muted">Not uploaded</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if warden.hostel_assigned %}
+                    <span class="badge bg-info">{{ warden.hostel_assigned.name }}</span>
+                  {% else %}
+                    <span class="text-muted">Not assigned</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <form method="post" class="d-inline-flex gap-2">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="assign_hostel">
+                    <input type="hidden" name="profile_id" value="{{ warden.id }}">
+                    <select name="hostel_id" class="form-select form-select-sm" style="max-width: 200px;">
+                      <option value="">No Hostel</option>
+                      {% for hostel in hostels %}
+                        <option value="{{ hostel.id }}" {% if warden.hostel_assigned.id == hostel.id %}selected{% endif %}>{{ hostel.name }}</option>
+                      {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-sm btn-primary">Assign</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="text-muted mb-0">No approved wardens yet.</p>
+    {% endif %}
+  </div>
+
+  <div class="mt-4">
+    <a href="{% url 'staff_dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+  </div>
+</div>
+{% endblock %}

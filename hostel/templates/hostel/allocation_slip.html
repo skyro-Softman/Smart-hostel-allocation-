@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      
+      <!-- Printable Card Wrapper -->
+      <div class="card border-0 shadow-sm p-4" id="printableSlip">
+        <div class="card-header bg-transparent text-center border-bottom pb-4">
+          <h2 class="fw-bold mb-1">Smart Hostel Management System</h2>
+          <h5 class="text-muted">Official Hostel Allocation Slip</h5>
+        </div>
+        
+        <div class="card-body py-4">
+          <div class="row mb-4">
+            <div class="col-sm-6">
+              <p class="mb-1 text-muted">Student Name:</p>
+              <h5 class="fw-semibold">{{ allocation.user.get_full_name|default:allocation.user.username }}</h5>
+            </div>
+            <div class="col-sm-6 text-sm-end">
+              <p class="mb-1 text-muted">Allocation Date:</p>
+              <h5 class="fw-semibold">{{ allocation.created_at|date:"F d, Y"|default:"Recent" }}</h5>
+            </div>
+          </div>
+
+          <table class="table table-bordered mb-4">
+            <tbody>
+              <tr>
+                <th class="w-50 bg-light">Hostel Name</th>
+                <td>{{ allocation.room.hostel.name }}</td>
+              </tr>
+              <tr>
+                <th class="bg-light">Room Number</th>
+                <td>{{ allocation.room.room_number }}</td>
+              </tr>
+              <tr>
+                <th class="bg-light">Bed Space</th>
+                <td>{{ allocation.bed.bed_code }}</td>
+              </tr>
+              <tr>
+                <th class="bg-light">Allocation Status</th>
+                <td><span class="badge bg-success">Confirmed</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="alert alert-info py-2 small mb-0">
+            <i class="bi bi-info-circle me-1"></i> Please present this slip to the hostel warden during check-in along with your valid student ID card.
+          </div>
+        </div>
+
+        <div class="card-footer bg-transparent text-center border-top pt-3 text-muted small">
+          Generated automatically by Smart Hostel System &bull; Authorized Document
+        </div>
+      </div>
+
+      <!-- Action Buttons (Hidden when printing) -->
+      <div class="text-center mt-4 d-print-none">
+        <button onclick="window.print()" class="btn btn-primary btn-lg px-4 me-2">
+          <i class="bi bi-printer me-1"></i> Print / Download Slip
+        </button>
+        <a href="{% url 'student_dashboard' %}" class="btn btn-outline-secondary btn-lg px-4">Back to Dashboard</a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Print-specific styles to hide unwanted layout elements -->
+<style>
+@media print {
+  body {
+    background-color: white !important;
+  }
+  .d-print-none {
+    display: none !important;
+  }
+  .card {
+    border: none !important;
+    box-shadow: none !important;
+  }
+}
+</style>
+{% endblock %}

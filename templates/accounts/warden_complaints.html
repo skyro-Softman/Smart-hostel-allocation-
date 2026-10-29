@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-4">Student Complaints</h2>
+
+  <h4 class="mb-3">Pending / In Progress</h4>
+  {% for complaint in pending_complaints %}
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <h5 class="mb-1">{{ complaint.subject|default:'No Subject' }}</h5>
+            <p class="mb-1"><strong>Student:</strong> {{ complaint.user.profile.full_name|default:complaint.user.username }} (ID: {{ complaint.user.username }})</p>
+            <p class="mb-1"><strong>Department:</strong> {{ complaint.user.profile.department|default:'-' }}</p>
+            <p class="mb-2"><strong>Description:</strong> {{ complaint.description }}</p>
+          </div>
+          <span class="badge {% if complaint.status == 'PENDING' %}bg-warning{% else %}bg-info{% endif %}">{{ complaint.get_status_display }}</span>
+        </div>
+
+        <form method="post" class="mt-2">
+          {% csrf_token %}
+          <input type="hidden" name="complaint_id" value="{{ complaint.id }}">
+          <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+              <label class="form-label">Status</label>
+              <select name="status" class="form-select">
+                <option value="PENDING" {% if complaint.status == 'PENDING' %}selected{% endif %}>Pending</option>
+                <option value="IN_PROGRESS" {% if complaint.status == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
+                <option value="RESOLVED">Resolved</option>
+              </select>
+            </div>
+            <div class="col-md-7">
+              <label class="form-label">Reply</label>
+              <input type="text" name="reply" class="form-control" placeholder="Type your reply to student">
+            </div>
+            <div class="col-md-2 d-grid">
+              <button class="btn btn-primary">Update</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  {% empty %}
+    <div class="alert alert-secondary">No active complaints.</div>
+  {% endfor %}
+
+  <h4 class="mb-3 mt-4">Resolved Complaints</h4>
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped">
+      <thead class="table-success">
+        <tr>
+          <th>Student Name</th>
+          <th>Student ID</th>
+          <th>Subject</th>
+          <th>Reply</th>
+          <th>Replied At</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for complaint in resolved_complaints %}
+          <tr>
+            <td>{{ complaint.user.profile.full_name|default:complaint.user.username }}</td>
+            <td>{{ complaint.user.username }}</td>
+            <td>{{ complaint.subject|default:'No Subject' }}</td>
+            <td>{{ complaint.warden_reply|default:'-' }}</td>
+            <td>{{ complaint.replied_at|default:'-' }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="5" class="text-center">No resolved complaints yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

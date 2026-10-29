@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4">
+  <h1>Your Outpass Requests</h1>
+  <a class="btn btn-primary" href="{% url 'leave_create' %}">Request Outpass</a>
+  <ul class="list-group mt-3">
+    {% for l in leaves %}
+      <li class="list-group-item">
+        <strong>{{ l.get_status_display }}</strong> — {{ l.outgoing_at|default:'-' }} to {{ l.incoming_at|default:'-' }}
+        <div class="small text-muted">Place: {{ l.place|default:'-' }} | Requested: {{ l.requested_at }}</div>
+      </li>
+    {% empty %}
+      <li class="list-group-item">No outpass requests</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

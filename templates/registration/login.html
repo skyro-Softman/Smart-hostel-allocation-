@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block body_class %}page-login{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-5 col-md-7">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent text-center py-4">
+          <h3 class="mb-1">Welcome Back</h3>
+          <p class="text-muted mb-0">Sign in to continue to Smart Hostel</p>
+        </div>
+        <div class="card-body">
+          <form method="post" novalidate>
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            <div class="mb-3">
+              <label class="form-label">Username</label>
+              {{ form.username }}
+              {{ form.username.errors }}
+            </div>
+            
+            <!-- Password Field with View Icon and Forgot Password -->
+            <div class="mb-3">
+              <label class="form-label">Password</label>
+              <div class="position-relative">
+                {{ form.password }}
+                <span class="position-absolute top-50 end-0 translate-middle-y pe-3" style="cursor: pointer;" id="togglePassword">
+                  <i class="bi bi-eye-slash" id="toggleIcon" style="color: #6c757d;"></i>
+                </span>
+              </div>
+              {{ form.password.errors }}
+              
+              <div class="text-end mt-2">
+                <a href="{% url 'password_reset' %}" class="text-decoration-none" style="font-size: 0.85rem; color: #00897b;">Forgot Password?</a>
+              </div>
+            </div>
+
+            <div class="d-grid gap-2">
+              <button class="btn btn-primary btn-lg" type="submit"><i class="bi bi-box-arrow-in-right me-1"></i>Login</button>
+            </div>
+          </form>
+          <hr>
+          <div class="text-center">
+            <p class="mb-2">New user?</p>
+            <p class="mb-0">
+              <a class="fw-semibold" href="{% url 'register_student' %}">Student Registration</a>
+              <span class="mx-2 text-muted">|</span>
+              <a class="fw-semibold" href="{% url 'register_warden' %}">Warden Registration</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    const togglePassword = document.querySelector('#togglePassword');
+    const passwordInput = document.querySelector('#id_password');
+    const toggleIcon = document.querySelector('#toggleIcon');
+
+    togglePassword.addEventListener('click', function () {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        
+        toggleIcon.classList.toggle('bi-eye');
+        toggleIcon.classList.toggle('bi-eye-slash');
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4">
+  <h1>Your complaints</h1>
+  <a class="btn btn-primary" href="{% url 'complaint_create' %}">New Complaint</a>
+  <ul class="list-group mt-3">
+    {% for c in complaints %}
+      <li class="list-group-item">
+        <strong>{{ c.get_status_display }}</strong> — {{ c.subject|default:'No Subject' }}
+        <div>{{ c.description }}</div>
+        {% if c.warden_reply %}
+          <div class="mt-1 text-success"><strong>Warden Reply:</strong> {{ c.warden_reply }}</div>
+        {% endif %}
+        <small class="text-muted">({{ c.created_at }})</small>
+      </li>
+    {% empty %}
+      <li class="list-group-item">No complaints</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

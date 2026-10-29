@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Hostel Fee Payment Verification</h4>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <div class="mb-4">
+                        <h5>Current Status: 
+                            {% if payment.status == 'VERIFIED' %}
+                                <span class="badge bg-success">Verified</span>
+                            {% elif payment.status == 'PENDING' %}
+                                <span class="badge bg-warning text-dark">Pending Review</span>
+                            {% elif payment.status == 'REJECTED' %}
+                                <span class="badge bg-danger">Rejected</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Not Uploaded</span>
+                            {% endif %}
+                        </h5>
+
+                        {% if payment.status == 'REJECTED' and payment.warden_comment %}
+                            <div class="alert alert-danger mt-3">
+                                <strong>Warden Feedback:</strong> {{ payment.warden_comment }}
+                            </div>
+                        {% endif %}
+
+                        {% if payment.receipt_file %}
+                            <p class="text-muted mt-2">
+                                <small>Uploaded Receipt: <a href="{{ payment.receipt_file.url }}" target="_blank">View File</a></small>
+                            </p>
+                        {% endif %}
+                    </div>
+
+                    {% if payment.status != 'VERIFIED' %}
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="{{ form.receipt_file.id_for_label }}" class="form-label">
+                                    {% if payment.receipt_file %}Upload New Receipt (to replace rejected one){% else %}Upload Payment Receipt (PDF or Image){% endif %}
+                                </label>
+                                {{ form.receipt_file }}
+                                {% if form.receipt_file.errors %}
+                                    <div class="text-danger small mt-1">{{ form.receipt_file.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Submit Receipt for Verification</button>
+                        </form>
+                    {% else %}
+                        <div class="text-center">
+                            <a href="{% url 'hostel:hostel_list' %}" class="btn btn-success w-100">Proceed to Room Allocation (Spin Wheel)</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

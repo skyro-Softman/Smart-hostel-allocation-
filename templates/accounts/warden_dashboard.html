@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block body_class %}page-dashboard-warden{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Warden Dashboard</h2>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-start mb-3">
+        <div class="d-flex align-items-center">
+        {% if user.profile.id_proof %}
+          <img src="{{ user.profile.id_proof.url }}" alt="Warden ID Proof" class="rounded-circle me-3" style="width: 100px; height: 100px; object-fit: cover;">
+        {% else %}
+          <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-3" style="width: 100px; height: 100px; font-size: 2rem;">
+            {{ user.profile.full_name|default:user.username|first|upper }}
+          </div>
+        {% endif %}
+        <div>
+          <h5 class="card-title mb-2">My Profile</h5>
+          <p class="mb-1"><strong>Name:</strong> {{ user.profile.full_name|default:user.username }}</p>
+          <p class="mb-1"><strong>Warden ID:</strong> {{ user.username }}</p>
+          <p class="mb-1"><strong>Email:</strong> {{ user.email|default:'-' }}</p>
+          <p class="mb-0"><strong>Managed Hostel:</strong>
+            {% if assigned_hostel %}
+              {{ assigned_hostel.name }} ({{ assigned_hostel.get_hostel_type_display }})
+            {% else %}
+              Not assigned yet
+            {% endif %}
+          </p>
+        </div>
+        </div>
+        <a class="btn btn-dark" href="{% url 'warden_dashboard' %}">Home</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-2 mb-4">
+    <div class="col-md-3"><a class="btn btn-primary w-100" href="{% url 'warden_room_approvals' %}">Room Approval</a></div>
+    <div class="col-md-3"><a class="btn btn-success w-100" href="{% url 'warden_attendance_marking' %}">Attendance Marking</a></div>
+    <div class="col-md-3"><a class="btn btn-warning w-100" href="{% url 'warden_leave_approvals' %}">Leave Request Approval</a></div>
+    <div class="col-md-3"><a class="btn btn-info w-100" href="{% url 'warden_complaints' %}">Complaints</a></div>
+  </div>
+
+  <h4 class="mb-3">Room Details by Floor</h4>
+
+  {% if not assigned_hostel %}
+    <div class="alert alert-warning">No hostel is assigned to your account. Ask admin to assign a hostel.</div>
+  {% elif not floor_data %}
+    <div class="alert alert-secondary">No floors/rooms available in your assigned hostel.</div>
+  {% else %}
+    {% for floor_section in floor_data %}
+      <div class="card mb-3">
+        <div class="card-header bg-light">
+          <strong>Floor {{ floor_section.floor.floor_name }}</strong>
+        </div>
+        <div class="card-body">
+          {% if floor_section.rooms %}
+            <div class="table-responsive">
+              <table class="table table-bordered table-striped mb-0">
+                <thead>
+                  <tr>
+                    <th>Room</th>
+                    <th>Total Beds</th>
+                    <th>Occupied</th>
+                    <th>Vacant</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for room_info in floor_section.rooms %}
+                    <tr>
+                      <td>{{ room_info.room.room_number }}</td>
+                      <td>{{ room_info.total_beds }}</td>
+                      <td class="text-success">{{ room_info.occupied_count }}</td>
+                      <td class="text-danger">{{ room_info.vacant_count }}</td>
+                      <td>
+                        <a class="btn btn-sm btn-outline-primary" href="{% url 'warden_room_detail' room_info.room.id %}">View Bed Details</a>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <p class="mb-0 text-muted">No rooms found on this floor.</p>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  {% endif %}
+</div>
+{% endblock %}
